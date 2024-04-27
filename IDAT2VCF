@@ -1,0 +1,30 @@
+iaap-cli gencall /home/juliaapolonio/Documents/mestrado/data/genomicao/caninehd_b.bpm /home/juliaapolonio/Documents/mestrado/data/genomicao/caninehd_a.egt /home/juliaapolonio/Documents/mestrado/data/genomicao/results/test_canine -f /home/juliaapolonio/Documents/mestrado/data/genomicao/idats -g
+
+
+gencall \
+   caninehd_b.bpm \
+   caninehd_a.egt \
+   calls \
+   --idat-folder idats \
+   --output-gtc \
+   --gender-estimate-call-rate-threshold 0.95 \
+   --gender-estimate-x-het-rate-threshold 0.2
+
+   bcftools +gtc2vcf \
+   --bpm caninehd_b.bpm \
+   --csv caninehd_b.csv \
+   --egt caninehd_a.egt \
+   --gtcs gtcs/ \
+   --fasta-ref Canis_lupus_familiaris.ROS_Cfam_1.0.dna.toplevel.fa \
+   --output results.vcf
+
+   for file in *.vcf*; do
+  for sample in `bcftools query -l $file`; do
+    bcftools view -c1 -Oz -s $sample -o ${file/.vcf*/.$sample.vcf.gz} $file
+  done
+done
+
+samtools faidx Canis_lupus_familiaris.ROS_Cfam_1.0.dna.toplevel.fa
+
+conda activate vep
+vep --input_file results.GSM4275077_202062530016.sorted.vcf.gz --output_file results.GSM4275077_202062530016.sorted.anno.vcf --format vcf --vcf --offline --species canis_lupus_familiaris
